@@ -1,0 +1,176 @@
+# Production MSDD Configuration for High-Performance Server Deployment
+# Optimized for GPU acceleration and high-throughput processing
+
+name: "ProductionMSDDDiarizer"
+
+# Production-optimized settings
+num_workers: 8
+sample_rate: 16000
+batch_size: 64
+device: "cuda"  # Force GPU usage for production
+verbose: false  # Reduce logging overhead
+
+# Diarization pipeline configuration
+diarizer:
+  manifest_filepath: null
+  out_dir: null
+  oracle_vad: false
+  collar: 0.15  # Tighter collar for production
+  ignore_overlap: false  # Enable overlap detection
+
+  # High-performance VAD
+  vad:
+    model_path: "vad_multilingual_marblenet"
+    external_vad_manifest: null
+    
+    parameters:
+      window_length_in_sec: 0.63
+      shift_length_in_sec: 0.08
+      smoothing: "median"  # Enable smoothing for better quality
+      overlap: 0.5
+      onset: 0.6  # Higher threshold for precision
+      offset: 0.4
+      pad_onset: 0.15
+      pad_offset: 0.15
+      min_duration_on: 0.3
+      min_duration_off: 0.3
+      filter_speech_first: true
+
+  # High-quality speaker embeddings
+  speaker_embeddings:
+    model_path: "titanet_large"
+    parameters:
+      window_length_in_sec: [2.0, 1.5, 1.0, 0.5]
+      shift_length_in_sec: [1.0, 0.75, 0.5, 0.25]
+      multiscale_weights: [0.4, 0.3, 0.2, 0.1]
+      save_embeddings: true
+      normalize_embeddings: true
+      use_gpu: true
+
+  # Production clustering
+  clustering:
+    parameters:
+      oracle_num_speakers: false
+      max_num_speakers: 15
+      enhanced_count_thres: 100
+      max_rp_threshold: 0.2
+      sparse_search_volume: 20
+      maj_vote_spk_count: true
+      chunk_cluster_count: 100
+      embeddings_per_chunk: 20000
+      clustering_method: "spectral"
+      min_clusters: 1
+      max_clusters: 15
+      use_gpu_clustering: true
+
+  # Production MSDD model
+  msdd_model:
+    model_path: null
+    parameters:
+      use_speaker_model_from_ckpt: true
+      infer_batch_size: 50
+      sigmoid_threshold: [0.6, 0.7, 0.8, 0.9]
+      seq_eval_mode: false
+      split_infer: true
+      diar_window_length: 100
+      overlap_infer_spk_limit: 8
+      use_adaptive_threshold: true
+      adaptive_threshold_alpha: 0.05
+      min_speaker_duration: 0.3
+      max_speaker_duration: 60.0
+      use_gpu_inference: true
+
+  # Production ASR (if enabled)
+  asr:
+    model_path: null
+    parameters:
+      asr_based_vad: false
+      asr_based_vad_threshold: 0.8
+      asr_batch_size: 32
+      decoder_delay_in_sec: null
+      word_ts_anchor_offset: 0.1
+      word_ts_anchor_pos: "start"
+      fix_word_ts_with_VAD: true
+      colored_text: true
+      print_time: true
+      break_lines: false
+
+    ctc_decoder_parameters:
+      pretrained_language_model: null
+      beam_width: 64
+      alpha: 0.6
+      beta: 2.0
+
+    realigning_lm_parameters:
+      arpa_language_model: null
+      min_number_of_words: 2
+      max_number_of_words: 15
+      logprob_diff_threshold: 1.0
+
+# Production-optimized advanced settings
+msdd_advanced:
+  speaker_verification:
+    enabled: true
+    threshold: 0.6
+    min_speaker_confidence: 0.8
+  
+  overlap_detection:
+    enabled: true
+    min_overlap_duration: 0.05
+    max_overlap_duration: 10.0
+  
+  temporal_consistency:
+    enabled: true
+    window_size: 15.0
+    min_segment_duration: 0.2
+  
+  multiscale:
+    enabled: true
+    scales: [0.3, 0.5, 1.0, 1.5, 2.0]
+    weights: [0.1, 0.2, 0.4, 0.2, 0.1]
+
+# High-performance optimization
+performance:
+  max_memory_usage: "16GB"
+  enable_mixed_precision: true
+  enable_tensor_cores: true
+  
+  num_parallel_workers: 8
+  enable_async_processing: true
+  enable_streaming: true
+  
+  enable_embedding_cache: true
+  cache_dir: "/tmp/msdd_cache"
+  max_cache_size: "8GB"
+  
+  # GPU optimization
+  gpu_memory_fraction: 0.9
+  enable_cuda_graphs: true
+  enable_tensorrt: false  # Enable if available
+
+# Production output configuration
+output:
+  formats: ["rttm", "json", "srt", "vtt", "txt"]
+  include_confidence: true
+  include_embeddings: false
+  include_vad: true
+  include_speaker_info: true
+  
+  rttm:
+    include_speaker_names: true
+    include_confidence: true
+    precision: 3
+  
+  json:
+    pretty_print: false  # Disable for production
+    include_metadata: true
+    include_processing_info: true
+    compression: "gzip"
+
+# Monitoring and logging
+monitoring:
+  enable_metrics: true
+  log_level: "INFO"
+  enable_profiling: false
+  save_intermediate_results: false
+

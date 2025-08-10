@@ -1,0 +1,165 @@
+# Development MSDD Configuration for Testing and Development
+# Optimized for faster processing and debugging
+
+name: "DevelopmentMSDDDiarizer"
+
+# Development settings
+num_workers: 2
+sample_rate: 16000
+batch_size: 16
+device: "auto"  # Auto-detect device
+verbose: true  # Enable verbose logging for debugging
+
+# Diarization pipeline configuration
+diarizer:
+  manifest_filepath: null
+  out_dir: null
+  oracle_vad: false
+  collar: 0.5  # Loose collar for development
+  ignore_overlap: true  # Disable overlap for simplicity
+
+  # Lightweight VAD
+  vad:
+    model_path: "vad_multilingual_marblenet"
+    external_vad_manifest: null
+    
+    parameters:
+      window_length_in_sec: 0.63
+      shift_length_in_sec: 0.08
+      smoothing: false
+      overlap: 0.5
+      onset: 0.4  # Lower threshold for development
+      offset: 0.2
+      pad_onset: 0.3
+      pad_offset: 0.3
+      min_duration_on: 0.8
+      min_duration_off: 0.8
+      filter_speech_first: true
+
+  # Basic speaker embeddings
+  speaker_embeddings:
+    model_path: "titanet_large"
+    parameters:
+      window_length_in_sec: [1.5, 0.8]
+      shift_length_in_sec: [0.75, 0.4]
+      multiscale_weights: [0.6, 0.4]
+      save_embeddings: true
+      normalize_embeddings: true
+
+  # Simple clustering
+  clustering:
+    parameters:
+      oracle_num_speakers: false
+      max_num_speakers: 5
+      enhanced_count_thres: 50
+      max_rp_threshold: 0.3
+      sparse_search_volume: 5
+      maj_vote_spk_count: false
+      chunk_cluster_count: 25
+      embeddings_per_chunk: 5000
+      clustering_method: "spectral"
+      min_clusters: 1
+      max_clusters: 5
+
+  # Basic MSDD model
+  msdd_model:
+    model_path: null
+    parameters:
+      use_speaker_model_from_ckpt: true
+      infer_batch_size: 16
+      sigmoid_threshold: [0.7]
+      seq_eval_mode: false
+      split_infer: true
+      diar_window_length: 30
+      overlap_infer_spk_limit: 3
+      use_adaptive_threshold: false
+      min_speaker_duration: 1.0
+      max_speaker_duration: 20.0
+
+  # Basic ASR (if enabled)
+  asr:
+    model_path: null
+    parameters:
+      asr_based_vad: false
+      asr_based_vad_threshold: 1.0
+      asr_batch_size: 16
+      decoder_delay_in_sec: null
+      word_ts_anchor_offset: null
+      word_ts_anchor_pos: "start"
+      fix_word_ts_with_VAD: false
+      colored_text: true
+      print_time: true
+      break_lines: false
+
+    ctc_decoder_parameters:
+      pretrained_language_model: null
+      beam_width: 16
+      alpha: 0.5
+      beta: 2.5
+
+    realigning_lm_parameters:
+      arpa_language_model: null
+      min_number_of_words: 3
+      max_number_of_words: 8
+      logprob_diff_threshold: 1.5
+
+# Development advanced settings
+msdd_advanced:
+  speaker_verification:
+    enabled: false  # Disable for faster processing
+    threshold: 0.5
+    min_speaker_confidence: 0.6
+  
+  overlap_detection:
+    enabled: false  # Disable for faster processing
+    min_overlap_duration: 0.2
+    max_overlap_duration: 3.0
+  
+  temporal_consistency:
+    enabled: false  # Disable for faster processing
+    window_size: 5.0
+    min_segment_duration: 1.0
+  
+  multiscale:
+    enabled: false  # Disable for faster processing
+    scales: [1.0]
+    weights: [1.0]
+
+# Development performance settings
+performance:
+  max_memory_usage: "4GB"
+  enable_mixed_precision: false  # Disable for debugging
+  enable_tensor_cores: false
+  
+  num_parallel_workers: 2
+  enable_async_processing: false  # Disable for debugging
+  enable_streaming: false
+  
+  enable_embedding_cache: false  # Disable for debugging
+  cache_dir: "./dev_cache"
+  max_cache_size: "1GB"
+
+# Development output configuration
+output:
+  formats: ["json", "rttm"]
+  include_confidence: true
+  include_embeddings: false
+  include_vad: true
+  include_speaker_info: true
+  
+  rttm:
+    include_speaker_names: true
+    include_confidence: true
+  
+  json:
+    pretty_print: true  # Enable for development
+    include_metadata: true
+    include_processing_info: true
+
+# Development monitoring
+monitoring:
+  enable_metrics: false
+  log_level: "DEBUG"
+  enable_profiling: true
+  save_intermediate_results: true  # Enable for debugging
+

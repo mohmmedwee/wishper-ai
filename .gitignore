@@ -50,6 +50,9 @@ Thumbs.db
 uploads/
 outputs/
 models/
+logs/
+cache/
+temp/
 *.db
 *.sqlite
 *.log
@@ -89,3 +92,22 @@ dmypy.json
 *.temp
 temp/
 tmp/
+
+# NeMo model cache
+.nemo_cache/
+nemo_cache/
+
+# Audio processing
+*.wav.tmp
+*.mp3.tmp
+*.flac.tmp
+
+# Large files
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.tflite
