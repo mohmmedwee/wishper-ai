@@ -25,9 +25,9 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# # Install Python dependencies
+# RUN pip install --no-cache-dir --upgrade pip && \
+#     pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire project
 COPY . .
@@ -35,25 +35,11 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p uploads outputs logs cache
 
-# Ensure app/models directory exists and copy the real files
-RUN mkdir -p app/models && \
-    echo "=== Checking source files ===" && \
-    ls -la app/models/ && \
-    echo "=== Copying real model files ===" && \
-    cp app/models/transcription.py app/models/transcription.py 2>/dev/null || echo "transcription.py copy failed" && \
-    cp app/models/__init__.py app/models/__init__.py 2>/dev/null || echo "__init__.py copy failed" && \
-    echo "=== Model files after copy ===" && \
-    ls -la app/models/ && \
-    echo "=== transcription.py content preview ===" && \
-    head -5 app/models/transcription.py 2>/dev/null || echo "transcription.py not accessible"
-
-# Debug: Check the final structure
-RUN echo "=== Final app directory structure ===" && \
-    ls -la app/ && \
-    echo "=== App/models directory contents ===" && \
-    ls -la app/models/ && \
-    echo "=== App/models __init__.py ===" && \
-    cat app/models/__init__.py
+# Debug: Check what was copied
+RUN echo "=== After COPY . . ===" && \
+    echo "=== Root directory ===" && ls -la && \
+    echo "=== App directory ===" && ls -la app/ && \
+    echo "=== App/models directory ===" && ls -la app/models/
 
 # Verify Python path and package structure
 RUN echo 'import sys; print("Python path:", sys.path); import app; print("App package imported successfully"); print("App dir contents:", dir(app)); from app.models.transcription import TranscriptionRequest; print("TranscriptionRequest imported successfully"); print("All imports verified successfully")' > /tmp/verify_imports.py && \
