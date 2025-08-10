@@ -44,6 +44,9 @@ async def transcribe_audio(
     task: str = Query("transcribe", description="Task type"),
     whisper_model: Optional[str] = Query(None, description="Whisper model"),
     enable_diarization: bool = Query(True, description="Enable speaker diarization"),
+    source_separation: bool = Query(True, description="Enable source separation for better quality"),
+    parallel_processing: bool = Query(True, description="Enable parallel processing for faster results"),
+    enhanced_alignment: bool = Query(True, description="Enable enhanced alignment and punctuation"),
     output_format: str = Query("json", description="Output format")
 ):
     """Transcribe audio file with optional speaker diarization"""
@@ -87,6 +90,9 @@ async def transcribe_audio(
             task=task,
             whisper_model=whisper_model or settings.WHISPER_MODEL,
             enable_diarization=enable_diarization,
+            source_separation=source_separation,
+            parallel_processing=parallel_processing,
+            enhanced_alignment=enhanced_alignment,
             output_format=output_format
         )
         
@@ -175,8 +181,8 @@ async def get_transcription_status(
 @transcription_router.get("/transcribe/{transcription_id}/download")
 async def download_transcription(
     transcription_id: str,
-    format: str = Query("json", description="Download format"),
-    request: Request
+    request: Request,
+    format: str = Query("json", description="Download format")
 ):
     """Download transcription in specified format"""
     
@@ -241,3 +247,13 @@ async def delete_transcription(
         error_msg = f"Failed to delete transcription: {str(e)}"
         log_error(request_id, error_msg)
         raise HTTPException(status_code=500, detail=error_msg)
+
+@transcription_router.get("/features")
+async def get_features(request: Request):
+    """Get information about supported features"""
+    try:
+        diarization_service = await get_diarization_service(request)
+        return diarization_service.get_supported_features()
+    except Exception as e:
+        logger.error("Failed to get features", error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get features")

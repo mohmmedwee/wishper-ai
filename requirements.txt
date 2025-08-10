@@ -12,6 +12,9 @@ librosa>=0.10.0
 soundfile>=0.12.1
 pydub>=0.25.1
 demucs>=4.0.0
+ctc-forced-aligner>=0.1.0
+deepmultilingualpunctuation>=0.1.0
+nltk>=3.8.0
 
 # Speaker diarization
 pyannote.audio>=3.0.0
