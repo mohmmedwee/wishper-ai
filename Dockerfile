@@ -86,20 +86,21 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p uploads outputs logs cache
 
-# Debug: Check what we actually have in the app directory after COPY
-RUN echo "=== App directory structure after COPY ===" && ls -la app/ && \
-    echo "=== App/models directory contents ===" && ls -la app/models/ && \
-    echo "=== App/models __init__.py ===" && cat app/models/__init__.py
-
-# If app/models is missing, copy it from the source
+# Check if app/models exists and create it if missing
 RUN if [ ! -d "app/models" ]; then \
-        echo "=== App/models missing, copying from source ===" && \
+        echo "=== App/models missing, creating it ===" && \
         mkdir -p app/models && \
+        echo "=== Copying from root models ===" && \
         cp -r models/* app/models/ 2>/dev/null || echo "Root models not found" && \
-        echo "=== Final app/models contents ===" && ls -la app/models/; \
+        echo "=== Created app/models contents ===" && ls -la app/models/; \
     else \
         echo "=== App/models directory already exists ==="; \
     fi
+
+# Now verify the structure
+RUN echo "=== Final app directory structure ===" && ls -la app/ && \
+    echo "=== App/models directory contents ===" && ls -la app/models/ && \
+    echo "=== App/models __init__.py ===" && cat app/models/__init__.py
 
 # Keep original structure - no need to move files
 
