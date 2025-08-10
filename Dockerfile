@@ -89,7 +89,10 @@ RUN mkdir -p uploads outputs logs cache models
 # Ensure app/models directory exists and has the right structure
 RUN ls -la app/ && echo "--- Creating app/models if missing ---" && \
     mkdir -p app/models && \
-    cp -r models/* app/models/ 2>/dev/null || echo "Models already in place"
+    echo "--- Root models directory contents ---" && ls -la models/ && \
+    echo "--- Copying models to app/models ---" && \
+    cp -r models/* app/models/ && \
+    echo "--- App/models after copy ---" && ls -la app/models/
 
 # Keep original structure - no need to move files
 
