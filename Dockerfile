@@ -91,13 +91,15 @@ RUN echo "=== App directory structure after COPY ===" && ls -la app/ && \
     echo "=== App/models directory contents ===" && ls -la app/models/ && \
     echo "=== App/models __init__.py ===" && cat app/models/__init__.py
 
-# Ensure app/models exists with the right files
-RUN echo "=== Ensuring app/models structure ===" && \
-    mkdir -p app/models && \
-    echo "=== Copying models files ===" && \
-    cp app/models/transcription.py app/models/ 2>/dev/null || echo "transcription.py not found" && \
-    cp app/models/__init__.py app/models/ 2>/dev/null || echo "__init__.py not found" && \
-    echo "=== Final app/models contents ===" && ls -la app/models/
+# If app/models is missing, copy it from the source
+RUN if [ ! -d "app/models" ]; then \
+        echo "=== App/models missing, copying from source ===" && \
+        mkdir -p app/models && \
+        cp -r models/* app/models/ 2>/dev/null || echo "Root models not found" && \
+        echo "=== Final app/models contents ===" && ls -la app/models/; \
+    else \
+        echo "=== App/models directory already exists ==="; \
+    fi
 
 # Keep original structure - no need to move files
 
