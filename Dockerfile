@@ -90,9 +90,18 @@ RUN mkdir -p uploads outputs logs cache
 RUN if [ ! -d "app/models" ]; then \
         echo "=== App/models missing, creating it ===" && \
         mkdir -p app/models && \
+        echo "=== Root models directory contents ===" && ls -la models/ && \
         echo "=== Copying from root models ===" && \
         cp -r models/* app/models/ 2>/dev/null || echo "Root models not found" && \
         echo "=== Created app/models contents ===" && ls -la app/models/; \
+        echo "=== If still empty, creating essential files ===" && \
+        if [ ! -f "app/models/__init__.py" ]; then \
+            echo '"""Models package for transcription service"""' > app/models/__init__.py; \
+        fi && \
+        if [ ! -f "app/models/transcription.py" ]; then \
+            echo '"""Transcription models"""' > app/models/transcription.py; \
+        fi && \
+        echo "=== Final app/models contents ===" && ls -la app/models/; \
     else \
         echo "=== App/models directory already exists ==="; \
     fi
