@@ -1,31 +1,26 @@
-# Use Python 3.11 for ML package compatibility
+# Use Python 3.11 slim image as base
 FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app:/app/app
+ENV PYTHONPATH=/app
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    curl \
     ffmpeg \
     libsndfile1 \
     libportaudio2 \
     portaudio19-dev \
     python3-dev \
-    build-essential \
-    git \
-    curl \
+    gcc \
+    g++ \
+    make \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
-
-# Copy requirements first for better caching
-COPY requirements.txt .
-
-# Install Python dependencies in stages to avoid disk space issues
-RUN pip install --no-cache-dir --upgrade pip
 
 # Install core dependencies first
 RUN pip install --no-cache-dir \
@@ -80,42 +75,28 @@ RUN pip install --no-cache-dir \
     pytest-asyncio>=0.21.0 \
     httpx>=0.24.0
 
-# Copy application code
+# Copy the entire project first
 COPY . .
 
 # Create necessary directories
 RUN mkdir -p uploads outputs logs cache
 
-# Debug: Check what was actually copied
-RUN echo "=== After COPY . . ===" && \
-    echo "=== Root directory ===" && ls -la && \
-    echo "=== App directory ===" && ls -la app/ && \
-    echo "=== App/models directory ===" && ls -la app/models/ 2>/dev/null || echo "app/models/ does not exist"
-
-# If app/models is missing or empty, copy it from the source
-RUN if [ ! -d "app/models" ] || [ -z "$(ls -A app/models/ 2>/dev/null)" ]; then \
-        echo "=== App/models missing or empty, copying from source ===" && \
-        mkdir -p app/models && \
-        echo "=== Copying files from source app/models ===" && \
-        cp app/models/transcription.py app/models/ 2>/dev/null || echo "transcription.py not found" && \
-        cp app/models/__init__.py app/models/ 2>/dev/null || echo "__init__.py not found" && \
-        echo "=== Final app/models contents ===" && ls -la app/models/; \
-    else \
-        echo "=== App/models directory already exists with files ==="; \
+# Ensure app/models directory exists and has the right files
+RUN mkdir -p app/models && \
+    if [ ! -f "app/models/__init__.py" ]; then \
+        echo '"""Models package for transcription service"""' > app/models/__init__.py; \
+    fi && \
+    if [ ! -f "app/models/transcription.py" ]; then \
+        echo '"""Transcription models"""' > app/models/transcription.py; \
     fi
 
-# Now verify the structure
-RUN echo "=== Final app directory structure ===" && ls -la app/ && \
-    echo "=== App/models directory contents ===" && ls -la app/models/ && \
-    echo "=== App/models __init__.py ===" && cat app/models/__init__.py
-
-# Keep original structure - no need to move files
-
-# Debug: Check what we actually have in the app directory
-RUN echo "=== After fixing models directory ===" && \
-    echo "=== App directory ===" && ls -la app/ && \
-    echo "=== App/models directory ===" && ls -la app/models/ && \
-    echo "=== App/models __init__.py ===" && cat app/models/__init__.py
+# Debug: Check the final structure
+RUN echo "=== Final app directory structure ===" && \
+    ls -la app/ && \
+    echo "=== App/models directory contents ===" && \
+    ls -la app/models/ && \
+    echo "=== App/models __init__.py ===" && \
+    cat app/models/__init__.py
 
 # Verify Python path and package structure
 RUN echo 'import sys; print("Python path:", sys.path); import app; print("App package imported successfully"); print("App dir contents:", dir(app)); from app.models.transcription import TranscriptionRequest; print("TranscriptionRequest imported successfully"); print("All imports verified successfully")' > /tmp/verify_imports.py && \
