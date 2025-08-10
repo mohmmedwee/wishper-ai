@@ -3,7 +3,7 @@ Parallel Processing API Routes
 Provides endpoints for high-performance parallel Whisper + NeMo processing
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form, Request
 from fastapi.responses import JSONResponse
 from typing import Optional, List, Dict, Any
 from pathlib import Path
@@ -17,31 +17,16 @@ from app.core.config import settings
 # Initialize router
 parallel_router = APIRouter(prefix="/api/v1/parallel", tags=["parallel-processing"])
 
-# Initialize parallel service
-parallel_service: Optional[ParallelDiarizationService] = None
-
-@parallel_router.on_event("startup")
-async def startup_event():
-    """Initialize parallel service on startup"""
-    global parallel_service
-    try:
-        parallel_service = ParallelDiarizationService(
-            max_workers=settings.MAX_WORKERS if hasattr(settings, 'MAX_WORKERS') else 2,
-            use_process_pool=settings.USE_PROCESS_POOL if hasattr(settings, 'USE_PROCESS_POOL') else False
-        )
-        await parallel_service.initialize()
-    except Exception as e:
-        print(f"Failed to initialize parallel service: {e}")
-
-@parallel_router.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup parallel service on shutdown"""
-    global parallel_service
-    if parallel_service:
-        await parallel_service.cleanup()
+# Get parallel service from app state
+async def get_parallel_service(request: Request) -> ParallelDiarizationService:
+    """Dependency to get the parallel diarization service from app state"""
+    if not hasattr(request.app.state, 'parallel_diarization_service'):
+        raise HTTPException(status_code=503, detail="Parallel service not available")
+    return request.app.state.parallel_diarization_service
 
 @parallel_router.post("/transcribe")
 async def transcribe_parallel(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     language: Optional[str] = Form(None),
@@ -56,8 +41,7 @@ async def transcribe_parallel(
     This endpoint runs Whisper transcription and NeMo diarization simultaneously
     for maximum performance and efficiency.
     """
-    if not parallel_service or not parallel_service.initialized:
-        raise HTTPException(status_code=503, detail="Parallel service not available")
+    parallel_service = await get_parallel_service(request)
     
     try:
         # Validate file
@@ -113,6 +97,7 @@ async def transcribe_parallel(
 
 @parallel_router.post("/transcribe/async")
 async def transcribe_parallel_async(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     language: Optional[str] = Form(None),
@@ -124,8 +109,7 @@ async def transcribe_parallel_async(
     """
     Start async parallel processing and return task ID for status tracking
     """
-    if not parallel_service or not parallel_service.initialized:
-        raise HTTPException(status_code=503, detail="Parallel service not available")
+    parallel_service = await get_parallel_service(request)
     
     try:
         # Validate file

@@ -36,6 +36,8 @@ transcription_jobs = {}
 
 async def get_diarization_service(request: Request):
     """Dependency to get the diarization service"""
+    if not hasattr(request.app.state, 'diarization_service'):
+        raise HTTPException(status_code=503, detail="Diarization service not available")
     return request.app.state.diarization_service
 
 @transcription_router.post("/transcribe", response_model=TranscriptionResult)

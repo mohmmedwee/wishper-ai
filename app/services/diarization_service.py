@@ -492,9 +492,9 @@ class DiarizationService:
             'pip_install_command': 'pip install torch torchaudio faster-whisper nemo-toolkit'
         }
 
-    def get_whisper_models(self) -> List[str]:
+    async def get_whisper_models(self) -> List[str]:
         """Get available Whisper models"""
-        return self.whisper_utils.get_available_models()
+        return await self.whisper_utils.get_available_models()
 
     def get_supported_languages(self) -> List[str]:
         """Get supported languages"""
