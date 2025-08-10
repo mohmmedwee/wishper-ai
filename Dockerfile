@@ -86,21 +86,18 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p uploads outputs logs cache
 
-# Check if app/models exists and create it if missing
+# Debug: Check what was actually copied
+RUN echo "=== After COPY . . ===" && \
+    echo "=== Root directory ===" && ls -la && \
+    echo "=== App directory ===" && ls -la app/ && \
+    echo "=== App/models directory ===" && ls -la app/models/ 2>/dev/null || echo "app/models/ does not exist"
+
+# If app/models is missing, try to copy it from the source
 RUN if [ ! -d "app/models" ]; then \
-        echo "=== App/models missing, creating it ===" && \
+        echo "=== App/models missing, trying to copy from source ===" && \
         mkdir -p app/models && \
-        echo "=== Root models directory contents ===" && ls -la models/ && \
-        echo "=== Copying from root models ===" && \
-        cp -r models/* app/models/ 2>/dev/null || echo "Root models not found" && \
-        echo "=== Created app/models contents ===" && ls -la app/models/; \
-        echo "=== If still empty, creating essential files ===" && \
-        if [ ! -f "app/models/__init__.py" ]; then \
-            echo '"""Models package for transcription service"""' > app/models/__init__.py; \
-        fi && \
-        if [ ! -f "app/models/transcription.py" ]; then \
-            echo '"""Transcription models"""' > app/models/transcription.py; \
-        fi && \
+        echo "=== Checking if source app/models exists ===" && \
+        ls -la app/models/ 2>/dev/null || echo "Source app/models not found" && \
         echo "=== Final app/models contents ===" && ls -la app/models/; \
     else \
         echo "=== App/models directory already exists ==="; \
