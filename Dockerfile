@@ -35,14 +35,17 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p uploads outputs logs cache
 
-# Ensure app/models directory exists and has the right files
+# Ensure app/models directory exists and copy the real files
 RUN mkdir -p app/models && \
-    if [ ! -f "app/models/__init__.py" ]; then \
-        echo '"""Models package for transcription service"""' > app/models/__init__.py; \
-    fi && \
-    if [ ! -f "app/models/transcription.py" ]; then \
-        echo '"""Transcription models"""' > app/models/transcription.py; \
-    fi
+    echo "=== Checking source files ===" && \
+    ls -la app/models/ && \
+    echo "=== Copying real model files ===" && \
+    cp app/models/transcription.py app/models/transcription.py 2>/dev/null || echo "transcription.py copy failed" && \
+    cp app/models/__init__.py app/models/__init__.py 2>/dev/null || echo "__init__.py copy failed" && \
+    echo "=== Model files after copy ===" && \
+    ls -la app/models/ && \
+    echo "=== transcription.py content preview ===" && \
+    head -5 app/models/transcription.py 2>/dev/null || echo "transcription.py not accessible"
 
 # Debug: Check the final structure
 RUN echo "=== Final app directory structure ===" && \
