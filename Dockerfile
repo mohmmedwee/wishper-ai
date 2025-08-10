@@ -3,7 +3,7 @@ FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/app
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
@@ -86,13 +86,12 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p uploads outputs logs cache models
 
-# Fix the directory structure - move app contents to root
-RUN mv app/* . && rmdir app
+# Keep original structure - no need to move files
 
 # Verify Python path and package structure
 RUN python -c "import sys; print('Python path:', sys.path)" && \
-    python -c "import models; print('Models package imported successfully')" && \
-    python -c "from models.transcription import TranscriptionRequest; print('TranscriptionRequest imported successfully')" && \
+    python -c "import app; print('App package imported successfully')" && \
+    python -c "from app.models.transcription import TranscriptionRequest; print('TranscriptionRequest imported successfully')" && \
     python -c "print('All imports verified successfully')"
 
 # Expose port
@@ -103,4 +102,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the application
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
