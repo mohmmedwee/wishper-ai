@@ -14,6 +14,7 @@ services:
       - WHISPER_DEVICE=auto
       - NEMO_DEVICE=auto
       - LOG_LEVEL=INFO
+      - ENABLE_METRICS=false
     volumes:
       - ./uploads:/app/uploads
       - ./outputs:/app/outputs

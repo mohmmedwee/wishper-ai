@@ -1,3 +1,6 @@
+# Comprehensive requirements for Enhanced Whisper Diarization Service
+# This file includes all dependencies for production deployment with ML models
+
 # Core web framework
 fastapi>=0.100.0
 uvicorn[standard]>=0.20.0
@@ -17,16 +20,42 @@ structlog>=23.0.0
 # File handling
 aiofiles>=23.0.0
 
-# Note: Heavy ML packages (torch, faster-whisper, nemo, demucs) are not included
-# due to Python 3.13 compatibility issues. These will be installed separately
-# when deploying to a server with Python 3.10/3.11 support.
+# Core ML dependencies
+torch>=2.0.0
+torchaudio>=2.0.0
+transformers>=4.30.0
+faster-whisper>=0.9.0
+nemo-toolkit[asr]>=1.20.0
+nemo-toolkit[nlp]>=1.20.0
 
-# For production deployment with ML models, uncomment and install:
-# torch>=2.0.0
-# torchaudio>=2.0.0
-# faster-whisper>=0.9.0
-# nemo-toolkit[asr]>=1.20.0
-# demucs>=4.0.0
-# ctc-forced-aligner>=0.1.0
-# deepmultilingualpunctuation>=0.1.0
-# nltk>=3.8.0
+# Audio processing
+librosa>=0.10.0
+soundfile>=0.12.1
+pydub>=0.25.1
+demucs>=4.0.0
+
+# Advanced features
+ctc-forced-aligner>=0.1.0
+deepmultilingualpunctuation>=0.1.0
+nltk>=3.8.0
+
+# Speaker diarization
+pyannote.audio>=3.0.0
+pyannote.core>=5.0.0
+
+# Utilities
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+pandas>=2.0.0
+tqdm>=4.65.0
+
+# Database and caching
+redis>=4.6.0
+sqlalchemy>=2.0.0
+alembic>=1.11.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0
