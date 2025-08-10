@@ -120,11 +120,8 @@ RUN echo "=== After fixing models directory ===" && \
     echo "=== App/models __init__.py ===" && cat app/models/__init__.py
 
 # Verify Python path and package structure
-RUN python -c "import sys; print('Python path:', sys.path)" && \
-    python -c "import app; print('App package imported successfully')" && \
-    python -c "print('App dir contents:', dir(app))" && \
-    python -c "from app.models.transcription import TranscriptionRequest; print('TranscriptionRequest imported successfully')" && \
-    python -c "print('All imports verified successfully')"
+RUN echo 'import sys; print("Python path:", sys.path); import app; print("App package imported successfully"); print("App dir contents:", dir(app)); from app.models.transcription import TranscriptionRequest; print("TranscriptionRequest imported successfully"); print("All imports verified successfully")' > /tmp/verify_imports.py && \
+    python /tmp/verify_imports.py
 
 # Expose port
 EXPOSE 8000
