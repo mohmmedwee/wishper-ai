@@ -86,10 +86,15 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p uploads outputs logs cache models
 
+# Ensure app/models directory exists and has the right structure
+RUN ls -la app/ && echo "--- Creating app/models if missing ---" && \
+    mkdir -p app/models && \
+    cp -r models/* app/models/ 2>/dev/null || echo "Models already in place"
+
 # Keep original structure - no need to move files
 
 # Debug: Check what we actually have in the app directory
-RUN echo "=== Current directory structure ===" && ls -la && \
+RUN echo "=== After fixing models directory ===" && \
     echo "=== App directory ===" && ls -la app/ && \
     echo "=== App/models directory ===" && ls -la app/models/ && \
     echo "=== App/models __init__.py ===" && cat app/models/__init__.py
