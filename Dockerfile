@@ -25,9 +25,9 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# # Install Python dependencies
-# RUN pip install --no-cache-dir --upgrade pip && \
-#     pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire project
 COPY . .
@@ -41,7 +41,7 @@ RUN echo "=== After COPY . . ===" && \
     echo "=== App directory ===" && ls -la app/ && \
     echo "=== App/models directory ===" && ls -la app/models/
 
-# Verify Python path and package structure
+# Verify Python path and package structure (AFTER installing dependencies)
 RUN echo 'import sys; print("Python path:", sys.path); import app; print("App package imported successfully"); print("App dir contents:", dir(app)); from app.models.transcription import TranscriptionRequest; print("TranscriptionRequest imported successfully"); print("All imports verified successfully")' > /tmp/verify_imports.py && \
     python /tmp/verify_imports.py
 
