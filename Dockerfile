@@ -88,9 +88,16 @@ RUN mkdir -p uploads outputs logs cache models
 
 # Keep original structure - no need to move files
 
+# Debug: Check what we actually have in the app directory
+RUN echo "=== Current directory structure ===" && ls -la && \
+    echo "=== App directory ===" && ls -la app/ && \
+    echo "=== App/models directory ===" && ls -la app/models/ && \
+    echo "=== App/models __init__.py ===" && cat app/models/__init__.py
+
 # Verify Python path and package structure
 RUN python -c "import sys; print('Python path:', sys.path)" && \
     python -c "import app; print('App package imported successfully')" && \
+    python -c "print('App dir contents:', dir(app))" && \
     python -c "from app.models.transcription import TranscriptionRequest; print('TranscriptionRequest imported successfully')" && \
     python -c "print('All imports verified successfully')"
 
