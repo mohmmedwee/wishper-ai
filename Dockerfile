@@ -6,6 +6,8 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONPATH=/app
+ENV PYTORCH_HOME=/app/models
+ENV HF_HOME=/app/models
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -19,7 +21,13 @@ RUN apt-get update && apt-get install -y \
     g++ \
     make \
     curl \
+    git \
+    git-lfs \
+    wget \
     && rm -rf /var/lib/apt/lists/*
+
+# Initialize git-lfs
+RUN git lfs install
 
 # Set working directory
 WORKDIR /app
@@ -35,7 +43,13 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p uploads outputs logs cache temp
+RUN mkdir -p uploads outputs logs cache temp models
+
+# Download NeMo models during build (with Docker flag for fallback handling)
+RUN python scripts/download_nemo_models.py --docker --models vad_multilingual_marblenet titanet_large ecapa_tdnn --output-dir models
+
+# Verify models were processed
+RUN ls -la models/ && echo "Models processed successfully"
 
 # Expose port
 EXPOSE 8000
