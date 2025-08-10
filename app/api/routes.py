@@ -28,6 +28,9 @@ logger = structlog.get_logger(__name__)
 # Create router
 transcription_router = APIRouter()
 
+# Import parallel routes
+from app.api.parallel_routes import parallel_router
+
 # In-memory storage for demo purposes (use Redis/DB in production)
 transcription_jobs = {}
 

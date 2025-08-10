@@ -6,3 +6,12 @@ A production-ready service for automatic speech recognition with speaker diariza
 __version__ = "1.0.0"
 __author__ = "Enhanced Whisper Diarization Team"
 __description__ = "Production-ready ASR service with advanced speaker diarization"
+
+__all__ = [
+    "main",
+    "api",
+    "core", 
+    "models",
+    "services",
+    "utils"
+]

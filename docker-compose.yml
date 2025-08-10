@@ -1,45 +1,47 @@
 version: '3.8'
 
 services:
-  whisper-diarization:
+  asr-whisper:
     build: .
-    container_name: whisper-diarization-service
+    container_name: asr-whisper-ml
     ports:
-      - "80:8000"
-    environment:
-      - HOST=0.0.0.0
-      - PORT=8000
-      - DEBUG=false
-      - WHISPER_MODEL=medium.en
-      - WHISPER_DEVICE=auto
-      - NEMO_DEVICE=auto
-      - LOG_LEVEL=INFO
-      - ENABLE_METRICS=false
+      - "8000:8000"
     volumes:
       - ./uploads:/app/uploads
       - ./outputs:/app/outputs
+      - ./logs:/app/logs
+      - ./cache:/app/cache
       - ./models:/app/models
-    depends_on:
-      - redis
+    environment:
+      - PYTHONPATH=/app
+      - PYTORCH_HOME=/app/models
+      - HF_HOME=/app/models
+      - CUDA_VISIBLE_DEVICES=0  # Set to empty string for CPU-only
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - asr-network
 
+  # Optional: Redis for caching and job queuing
   redis:
     image: redis:7-alpine
-    container_name: whisper-diarization-redis
+    container_name: asr-redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
-
-
+    networks:
+      - asr-network
 
 volumes:
   redis_data:
+
+networks:
+  asr-network:
+    driver: bridge

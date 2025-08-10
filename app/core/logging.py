@@ -6,9 +6,8 @@ import logging
 import sys
 import structlog
 from typing import Any, Dict
-from app.core.config import settings
 
-def setup_logging() -> None:
+def setup_logging(log_level: str = "INFO") -> None:
     """Setup structured logging configuration"""
     
     # Configure structlog
@@ -34,7 +33,7 @@ def setup_logging() -> None:
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,
-        level=getattr(logging, settings.LOG_LEVEL.upper()),
+        level=getattr(logging, log_level.upper()),
     )
     
     # Set specific logger levels

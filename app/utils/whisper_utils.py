@@ -1,31 +1,33 @@
 """
-Whisper transcription utilities
+Whisper Utilities for Audio Transcription
+Simplified version for Python 3.13 compatibility
 """
 
 import time
-from typing import Dict, Any, Optional
+import logging
 from pathlib import Path
+from typing import Dict, Any, Optional
 import structlog
-
-from faster_whisper import WhisperModel
-from app.models.transcription import TranscriptionRequest
 
 logger = structlog.get_logger(__name__)
 
-class WhisperProcessor:
-    """Handles Whisper transcription processing"""
+class WhisperUtils:
+    """Utility class for Whisper transcription operations"""
     
     def __init__(self):
         self.default_options = {
+            "language": None,
+            "task": "transcribe",
             "beam_size": 5,
             "best_of": 5,
-            "patience": 1,
+            "patience": 1.0,
             "length_penalty": 1.0,
             "repetition_penalty": 1.0,
             "no_speech_threshold": 0.6,
             "log_prob_threshold": -1.0,
             "compression_ratio_threshold": 2.4,
             "condition_on_previous_text": True,
+            "temperature": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
             "initial_prompt": None,
             "prefix": None,
             "suppress_blank": True,
@@ -33,174 +35,107 @@ class WhisperProcessor:
             "without_timestamps": False,
             "max_initial_timestamp": 1.0,
             "word_timestamps": True,
-            "prepend_punctuations": "\"'"¿([{-",
-            "append_punctuations": "\"'.。,，!！?？:：")]}、",
+            "prepend_punctuations": "\"'([{-",
+            "append_punctuations": "\"'.!?):]}",
         }
-    
-    async def transcribe(
-        self,
-        model: WhisperModel,
-        audio_file: Path,
-        request: TranscriptionRequest
-    ) -> Dict[str, Any]:
-        """Transcribe audio using Whisper"""
-        
-        try:
-            logger.info("Starting Whisper transcription", file=str(audio_file))
-            start_time = time.time()
-            
-            # Prepare transcription options
-            options = self._prepare_options(request)
-            
-            # Run transcription
-            segments, info = model.transcribe(
-                str(audio_file),
-                **options
-            )
-            
-            # Process results
-            result = await self._process_transcription_result(
-                segments, info, request, start_time
-            )
-            
-            logger.info("Whisper transcription completed", 
-                       file=str(audio_file),
-                       language=result.get("language"),
-                       processing_time=result.get("processing_time"))
-            
-            return result
-            
-        except Exception as e:
-            logger.error("Failed to transcribe with Whisper", 
-                        error=str(e), file=str(audio_file))
-            raise
-    
-    def _prepare_options(self, request: TranscriptionRequest) -> Dict[str, Any]:
-        """Prepare transcription options from request"""
-        
-        options = self.default_options.copy()
-        
-        # Override with request parameters
-        if request.language:
-            options["language"] = request.language
-        
-        if request.task == "translate":
-            options["task"] = "translate"
-        
-        if request.suppress_numerals:
-            options["suppress_tokens"].extend([i for i in range(0, 10)])
-        
-        if request.word_timestamps:
-            options["word_timestamps"] = True
-        else:
-            options["word_timestamps"] = False
-        
-        # Batch size
-        if request.batch_size:
-            options["batch_size"] = request.batch_size
-        
-        return options
-    
-    async def _process_transcription_result(
-        self,
-        segments,
-        info,
-        request: TranscriptionRequest,
-        start_time: float
-    ) -> Dict[str, Any]:
-        """Process Whisper transcription results"""
-        
-        try:
-            # Calculate processing time
-            processing_time = time.time() - start_time
-            
-            # Extract text and segments
-            full_text = ""
-            processed_segments = []
-            
-            for segment in segments:
-                # Extract segment data
-                segment_data = {
-                    "id": len(processed_segments),
-                    "start": segment.start,
-                    "end": segment.end,
-                    "text": segment.text.strip(),
-                    "confidence": getattr(segment, 'avg_logprob', None)
-                }
-                
-                # Add word timestamps if available
-                if hasattr(segment, 'words') and segment.words:
-                    segment_data["words"] = []
-                    for word in segment.words:
-                        word_data = {
-                            "word": word.word,
-                            "start": word.start,
-                            "end": word.end,
-                            "confidence": getattr(word, 'probability', None)
-                        }
-                        segment_data["words"].append(word_data)
-                
-                processed_segments.append(segment_data)
-                full_text += segment.text + " "
-            
-            # Clean up text
-            full_text = full_text.strip()
-            
-            # Create result
-            result = {
-                "text": full_text,
-                "segments": processed_segments,
-                "language": info.language,
-                "processing_time": processing_time,
-                "model_used": request.whisper_model or "default"
-            }
-            
-            return result
-            
-        except Exception as e:
-            logger.error("Failed to process transcription result", error=str(e))
-            raise
     
     async def validate_audio_file(self, audio_file: Path) -> bool:
         """Validate audio file for transcription"""
-        
         try:
-            # Check if file exists
             if not audio_file.exists():
-                logger.error("Audio file does not exist", file=str(audio_file))
+                logger.error(f"Audio file does not exist: {audio_file}")
                 return False
             
             # Check file size
             file_size = audio_file.stat().st_size
             if file_size == 0:
-                logger.error("Audio file is empty", file=str(audio_file))
+                logger.error(f"Audio file is empty: {audio_file}")
                 return False
             
             # Check file extension
-            supported_extensions = ['.wav', '.mp3', '.m4a', '.flac', '.ogg', '.aac']
-            if audio_file.suffix.lower() not in supported_extensions:
-                logger.error("Unsupported audio format", 
-                           file=str(audio_file), 
-                           extension=audio_file.suffix)
+            supported_formats = ['.wav', '.mp3', '.m4a', '.flac', '.ogg']
+            if audio_file.suffix.lower() not in supported_formats:
+                logger.error(f"Unsupported audio format: {audio_file.suffix}")
                 return False
             
-            logger.debug("Audio file validation passed", file=str(audio_file))
+            logger.info(f"Audio file validation passed: {audio_file}")
             return True
             
         except Exception as e:
-            logger.error("Failed to validate audio file", 
-                        error=str(e), file=str(audio_file))
+            logger.error(f"Audio file validation failed: {e}")
             return False
     
     async def get_available_models(self) -> list:
         """Get list of available Whisper models"""
-        
-        models = [
-            "tiny", "tiny.en",
-            "base", "base.en", 
-            "small", "small.en",
-            "medium", "medium.en",
-            "large", "large-v2", "large-v3"
+        # Note: This is a placeholder until ML packages are available
+        return [
+            "tiny", "base", "small", "medium", "large", "large-v2", "large-v3"
         ]
+    
+    def get_model_info(self, model_name: str) -> Dict[str, Any]:
+        """Get information about a specific model"""
+        model_info = {
+            "tiny": {"params": "39M", "multilingual": True, "english_only": False},
+            "base": {"params": "74M", "multilingual": True, "english_only": False},
+            "small": {"params": "244M", "multilingual": True, "english_only": False},
+            "medium": {"params": "769M", "multilingual": True, "english_only": False},
+            "large": {"params": "1550M", "multilingual": True, "english_only": False},
+            "large-v2": {"params": "1550M", "multilingual": True, "english_only": False},
+            "large-v3": {"params": "1550M", "multilingual": True, "english_only": False}
+        }
         
-        return models
+        return model_info.get(model_name, {"params": "Unknown", "multilingual": False, "english_only": False})
+    
+    async def estimate_transcription_time(self, audio_duration: float, model_name: str = "base") -> float:
+        """Estimate transcription time based on audio duration and model"""
+        # Rough estimates based on model complexity
+        model_multipliers = {
+            "tiny": 0.1,
+            "base": 0.2,
+            "small": 0.5,
+            "medium": 1.0,
+            "large": 2.0,
+            "large-v2": 2.0,
+            "large-v3": 2.5
+        }
+        
+        multiplier = model_multipliers.get(model_name, 0.5)
+        estimated_time = audio_duration * multiplier
+        
+        # Add some overhead
+        estimated_time += 5.0
+        
+        return estimated_time
+    
+    def get_supported_languages(self) -> list:
+        """Get list of supported languages"""
+        return [
+            "en", "zh", "de", "es", "ru", "ko", "fr", "ja", "pt", "tr", "pl", "ca", "nl", "ar", "sv", "it", "id", "hi", "fi", "vi", "he", "uk", "el", "ms", "cs", "ro", "da", "hu", "ta", "no", "th", "ur", "hr", "bg", "lt", "la", "mi", "ml", "cy", "sk", "te", "fa", "lv", "bn", "sr", "az", "sl", "kn", "et", "mk", "br", "eu", "is", "hy", "ne", "mn", "bs", "kk", "sq", "sw", "gl", "mr", "pa", "si", "km", "sn", "yo", "so", "af", "oc", "ka", "be", "tg", "sd", "gu", "am", "yi", "lo", "uz", "fo", "ht", "ps", "tk", "nn", "mt", "sa", "lb", "my", "bo", "tl", "mg", "as", "tt", "haw", "ln", "ha", "ba", "jw", "su"
+        ]
+    
+    def get_language_name(self, language_code: str) -> str:
+        """Get full language name from language code"""
+        language_names = {
+            "en": "English",
+            "zh": "Chinese",
+            "de": "German",
+            "es": "Spanish",
+            "ru": "Russian",
+            "ko": "Korean",
+            "fr": "French",
+            "ja": "Japanese",
+            "pt": "Portuguese",
+            "tr": "Turkish",
+            "pl": "Polish",
+            "ca": "Catalan",
+            "nl": "Dutch",
+            "ar": "Arabic",
+            "sv": "Swedish",
+            "it": "Italian",
+            "id": "Indonesian",
+            "hi": "Hindi",
+            "fi": "Finnish",
+            "vi": "Vietnamese"
+        }
+        
+        return language_names.get(language_code, language_code.upper())

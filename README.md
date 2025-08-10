@@ -1,258 +1,195 @@
-# 🎯 Enhanced Whisper Diarization Service
+# Whisper Diarization Service
 
-A **production-ready AI service** that combines OpenAI's Whisper speech recognition with advanced speaker diarization and enhanced features.
+A comprehensive speaker diarization service based on OpenAI Whisper and NeMo, providing automatic speech recognition with speaker identification.
 
-## ✨ Features
+## 🚀 Features
 
-### Core Capabilities
-- **🎤 Speech Recognition**: High-quality transcription using OpenAI Whisper
-- **👥 Speaker Diarization**: Identify who is speaking when using NeMo
-- **🌐 RESTful API**: Easy integration with your applications
-- **🖥️ CLI Tools**: Command-line interface for batch processing
+- **Automatic Speech Recognition (ASR)** using OpenAI Whisper
+- **Speaker Diarization** with NeMo MSDD
+- **Language Detection** (auto-detect or manual specification)
+- **Multiple Output Formats**: SRT, VTT, TXT, JSON, RTTM, CSV
+- **Audio Preprocessing** and quality analysis
+- **Real-time Processing** with progress tracking
+- **Batch Processing** support for multiple files
+- **RESTful API** with FastAPI
 
-### Enhanced Features (Production Ready)
-- **🎵 Source Separation**: Audio enhancement using Demucs
-- **⚡ Parallel Processing**: Faster results with concurrent execution
-- **🎯 Enhanced Alignment**: Precise timestamp alignment with CTC forced aligner
-- **🌍 Language Detection**: Automatic language identification
-- **💬 Multilingual Punctuation**: Smart punctuation for multiple languages
-- **🚀 GPU Acceleration**: CUDA support for faster processing
+## 🏗️ Architecture
+
+The service follows the whisper-diarization pipeline:
+
+1. **Audio Input** → Validation and preprocessing
+2. **Language Detection** → Auto-detect or use specified language
+3. **Whisper Transcription** → Generate text with timestamps
+4. **Speaker Diarization** → Identify speakers for each segment
+5. **Alignment & Post-processing** → Refine timestamps and format output
+
+## 📋 Requirements
+
+### System Requirements
+- **Python**: 3.11 or 3.12 (3.13 not yet supported by ML packages)
+- **FFmpeg**: For audio processing
+- **Memory**: 8GB+ RAM recommended
+- **Storage**: 10GB+ for models and cache
+
+### ML Packages (when using Python 3.11/3.12)
+- PyTorch & TorchAudio
+- Faster Whisper
+- NeMo Toolkit
+- Demucs (source separation)
+- CTC Forced Aligner
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- **Python 3.10+** (for production with ML models)
-- **Python 3.13** (for development/testing - limited features)
-- **Docker & Docker Compose** (recommended for production)
+### Option 1: Docker (Recommended for ML functionality)
 
-### Development Setup (Python 3.13)
 ```bash
 # Clone the repository
-git clone https://github.com/mohmmedwee/wishper-ai.git
-cd wishper-ai
+git clone <your-repo-url>
+cd asr_whispher
 
+# Run the ML service
+./run_ml_service.sh
+```
+
+The service will be available at `http://localhost:8000`
+
+### Option 2: Local Development (Python 3.11/3.12)
+
+```bash
 # Create virtual environment
-python3 -m venv venv
+python3.11 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the service
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Option 3: Python 3.13 (Limited functionality)
+
+```bash
+# Create virtual environment
+python3.13 -m venv venv
 source venv/bin/activate
 
 # Install basic dependencies
-pip install -r requirements.txt
+pip install numpy librosa soundfile pydub fastapi uvicorn
 
-# Start the service
-./start.sh
+# Run with enhanced mock mode
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Production Setup (Python 3.10/3.11)
-```bash
-# Use production requirements for full ML capabilities
-pip install -r requirements.production.txt
+## 📁 Project Structure
 
-# Start with full features
-./start.sh
+```
+asr_whispher/
+├── app/
+│   ├── api/                 # API routes and endpoints
+│   ├── core/               # Configuration and logging
+│   ├── models/             # Data models and schemas
+│   ├── services/           # Core business logic
+│   │   ├── diarization_service.py    # Main diarization service
+│   │   └── batch_processor.py        # Batch processing
+│   └── utils/              # Utility functions
+│       ├── audio_processor.py        # Audio processing
+│       ├── output_formats.py         # Output format conversion
+│       └── whisper_utils.py          # Whisper utilities
+├── config/                  # NeMo configuration files
+├── models/                  # Downloaded ML models
+├── uploads/                 # Audio file uploads
+├── outputs/                 # Transcription results
+├── Dockerfile               # Docker configuration
+├── docker-compose.yml       # Docker services
+└── run_ml_service.sh        # ML service runner
 ```
 
-### Docker Deployment
-```bash
-# Start all services
-docker-compose up -d
+## 🔧 API Usage
 
-# Check status
-docker-compose ps
-
-# View logs
-docker-compose logs -f whisper-diarization
-```
-
-## 📡 API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Service health check |
-| `/docs` | GET | Interactive API documentation |
-| `/api/v1/transcribe` | POST | Transcribe audio file |
-| `/api/v1/transcribe/batch` | POST | Batch transcription |
-| `/api/v1/transcribe/{id}` | GET | Get transcription status |
-| `/api/v1/transcribe/{id}/download` | GET | Download results |
-| `/api/v1/transcribe/{id}/delete` | DELETE | Delete transcription |
-| `/api/v1/features` | GET | Get supported features |
-
-## 🎵 Supported Audio Formats
-
-- **WAV** - Best quality, largest size
-- **MP3** - Good balance, widely supported
-- **M4A** - Apple devices, good quality
-- **FLAC** - Lossless, high quality
-- **OGG** - Open source, good compression
-
-## 🛠️ CLI Usage
+### Transcribe Audio
 
 ```bash
-# Activate virtual environment
-source venv/bin/activate
-
-# Get service information
-python cli.py info
-
-# Check feature status
-python cli.py features
-
-# Transcribe audio file
-python cli.py transcribe audio.mp3 --language en --output result.json
-
-# List available models
-python cli.py models
+curl -X POST "http://localhost:8000/api/transcribe" \
+  -H "Content-Type: multipart/form-data" \
+  -F "audio_file=@your_audio.wav" \
+  -F "language=en" \
+  -F "whisper_model=base"
 ```
 
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env` file based on `config.env`:
+### Check Service Status
 
 ```bash
-# Server settings
-PORT=80
-HOST=0.0.0.0
-
-# Whisper settings
-WHISPER_MODEL=medium.en
-WHISPER_DEVICE=auto
-
-# NeMo settings
-NEMO_DEVICE=auto
-
-# Storage settings
-UPLOAD_DIR=./uploads
-OUTPUT_DIR=./outputs
-MAX_FILE_SIZE=524288000
+curl "http://localhost:8000/api/status"
 ```
 
-### Feature Flags
-Control enhanced features via API parameters:
+### Health Check
 
-```python
-# Example transcription request
-{
-    "source_separation": true,      # Enable Demucs source separation
-    "parallel_processing": true,    # Enable parallel execution
-    "enhanced_alignment": true,     # Enable CTC alignment
-    "enable_diarization": true      # Enable speaker diarization
-}
+```bash
+curl "http://localhost:8000/api/health"
 ```
 
-## 🐳 Docker Configuration
+## 📊 Output Formats
 
-### Services
-- **whisper-diarization**: Main transcription service
-- **redis**: Job queue and caching (optional)
+The service supports multiple output formats:
 
-### GPU Support
-The service includes GPU configuration for CUDA-enabled servers:
+- **SRT**: SubRip subtitle format
+- **VTT**: WebVTT format
+- **TXT**: Plain text transcription
+- **JSON**: Structured data with metadata
+- **RTTM**: Rich Transcription Time Marked
+- **CSV**: Comma-separated values
 
-```yaml
-deploy:
-  resources:
-    reservations:
-      devices:
-        - driver: nvidia
-          count: 1
-          capabilities: [gpu]
+## 🎯 Configuration
+
+### Whisper Models
+- `tiny`: 39M parameters, fastest
+- `base`: 74M parameters, balanced
+- `small`: 244M parameters, good quality
+- `medium`: 769M parameters, high quality
+- `large`: 1550M parameters, best quality
+
+### Language Support
+Supports 100+ languages including:
+- English (en), Spanish (es), French (fr)
+- German (de), Chinese (zh), Japanese (ja)
+- Arabic (ar), Russian (ru), and many more
+
+## 🔍 Troubleshooting
+
+### Python 3.13 Compatibility Issues
+
+If you're using Python 3.13, you'll see this message:
+```
+ML models not available due to Python 3.13 compatibility
+Service will provide basic audio processing and enhanced mock transcription
 ```
 
-## 📊 Performance
-
-### Model Comparison
-| Model | Speed | Accuracy | Memory | Use Case |
-|-------|-------|----------|---------|----------|
-| `tiny` | ⚡⚡⚡ | ⭐⭐ | 💾 | Real-time, low-resource |
-| `base` | ⚡⚡ | ⭐⭐⭐ | 💾💾 | Balanced performance |
-| `small` | ⚡ | ⭐⭐⭐⭐ | 💾💾💾 | High accuracy |
-| `medium` | 🐌 | ⭐⭐⭐⭐⭐ | 💾💾💾💾 | Best quality |
-| `large` | 🐌🐌 | ⭐⭐⭐⭐⭐ | 💾💾💾💾💾 | Research/enterprise |
-
-### Scaling Options
-- **Horizontal**: Multiple service instances behind a load balancer
-- **Vertical**: Increase container resources (CPU, GPU, memory)
-- **Queue-based**: Redis-based job processing for high throughput
-
-## 🔒 Security & Production
-
-### Before Going Live
-1. **Set API Keys**: Configure authentication in `.env`
-2. **Restrict Origins**: Configure CORS settings
-3. **Enable HTTPS**: Use reverse proxy (nginx)
-4. **Monitor Resources**: Set up logging and alerting
-5. **Backup Data**: Regular backups of outputs and configurations
-
-### Security Features
-- API key authentication
-- File upload validation
-- CORS configuration
-- Rate limiting (configurable)
-- Secure file handling
-
-## 🚨 Troubleshooting
+**Solutions:**
+1. **Use Docker** (recommended): `./run_ml_service.sh`
+2. **Downgrade Python**: Use Python 3.11 or 3.12
+3. **Wait for updates**: ML packages will support Python 3.13 in 3-6 months
 
 ### Common Issues
 
-1. **CUDA Out of Memory**
-   ```bash
-   # Use smaller model
-   export WHISPER_MODEL=base.en
-   
-   # Reduce batch size
-   export WHISPER_BATCH_SIZE=8
-   ```
+1. **Out of Memory**: Reduce batch size or use smaller Whisper model
+2. **Audio Format Error**: Ensure audio file is in supported format
+3. **Model Download Failed**: Check internet connection and try again
 
-2. **Audio Format Issues**
-   ```bash
-   # Install FFmpeg
-   brew install ffmpeg  # macOS
-   apt-get install ffmpeg  # Ubuntu
-   ```
+## 🚀 Performance Tips
 
-3. **Service Won't Start**
-   ```bash
-   # Check port availability
-   lsof -i :80
-   
-   # Verify Python version
-   python --version
-   
-   # Check dependencies
-   pip list
-   ```
+- Use **GPU acceleration** when available
+- Choose appropriate **Whisper model size** for your needs
+- Enable **batch processing** for multiple files
+- Use **source separation** for noisy audio
 
-### Get Help
-- **Logs**: `docker-compose logs whisper-diarization`
-- **Health**: `curl http://localhost:80/health`
-- **Features**: `curl http://localhost:80/api/v1/features`
-- **Documentation**: `http://localhost:80/docs`
+## 📈 Monitoring
 
-## 🔄 Development vs Production
-
-### Development Mode (Python 3.13)
-- ✅ Basic service structure
-- ✅ API endpoints
-- ✅ CLI tools
-- ✅ Mock transcription results
-- ❌ ML models (not compatible)
-- ❌ GPU acceleration
-
-### Production Mode (Python 3.10/3.11)
-- ✅ All features enabled
-- ✅ Full ML model support
-- ✅ GPU acceleration
-- ✅ Source separation
-- ✅ Enhanced alignment
-- ✅ Parallel processing
-
-## 📈 Roadmap
-
-- [ ] **v2.1**: Advanced speaker clustering algorithms
-- [ ] [ ] **v2.2**: Real-time streaming transcription
-- [ ] **v2.3**: Custom model fine-tuning
-- [ ] **v2.4**: Multi-language simultaneous translation
-- [ ] **v2.5**: Enterprise SSO integration
+The service provides:
+- Real-time processing status
+- Audio quality metrics
+- Speaker detection confidence
+- Processing time statistics
 
 ## 🤝 Contributing
 
@@ -264,15 +201,19 @@ deploy:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- **OpenAI** for Whisper speech recognition
-- **NVIDIA NeMo** for speaker diarization
-- **Facebook Research** for Demucs source separation
-- **Hugging Face** for model hosting and tools
+- [OpenAI Whisper](https://github.com/openai/whisper) for ASR
+- [NeMo](https://github.com/NVIDIA/NeMo) for speaker diarization
+- [Faster Whisper](https://github.com/guillaumekln/faster-whisper) for optimized inference
+- [Demucs](https://github.com/facebookresearch/demucs) for source separation
 
----
+## 📞 Support
 
-**🎉 Ready to deploy!** Your enhanced transcription service is now production-ready with advanced features and GPU acceleration support.
+For issues and questions:
+1. Check the troubleshooting section
+2. Review existing GitHub issues
+3. Create a new issue with detailed information
+4. Include audio file samples and error logs
