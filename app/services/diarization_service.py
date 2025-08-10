@@ -301,12 +301,12 @@ class DiarizationService:
                 confidence = self._calculate_confidence(audio_info, i)
                 
                 segment = TranscriptionSegment(
-                    start_time=current_time,
-                    end_time=min(current_time + segment_duration, duration),
+                    id=i + 1,
+                    start=current_time,
+                    end=min(current_time + segment_duration, duration),
                     text=text,
-                    speaker_id=speaker_id,
-                    confidence=confidence,
-                    language=language
+                    speaker=speaker_id,
+                    confidence=confidence
                 )
                 
                 segments.append(segment)
@@ -317,22 +317,18 @@ class DiarizationService:
             for i in range(estimated_speakers):
                 speaker_id = f"SPEAKER_{i:02d}"
                 speaker_segments.append(SpeakerSegment(
-                    speaker_id=speaker_id,
                     start_time=0.0,
                     end_time=duration,
-                    total_duration=duration
+                    speaker_id=speaker_id
                 ))
             
             return TranscriptionResult(
-                request_id=str(uuid.uuid4()),
-                audio_file=str(audio_file),
-                language=language,
-                duration=duration,
+                transcription_id=str(uuid.uuid4()),
+                text=" ".join([seg.text for seg in segments]),
                 segments=segments,
                 speaker_segments=speaker_segments,
-                total_speakers=estimated_speakers,
-                processing_time=0.0,
-                status="completed"
+                language=language,
+                processing_time=0.0
             )
             
         except Exception as e:
@@ -361,10 +357,9 @@ class DiarizationService:
                 end_time = ((i + 1) * duration) / estimated_speakers
                 
                 speaker_segments.append(SpeakerSegment(
-                    speaker_id=speaker_id,
                     start_time=start_time,
                     end_time=end_time,
-                    total_duration=end_time - start_time
+                    speaker_id=speaker_id
                 ))
             
             # Update transcription result
