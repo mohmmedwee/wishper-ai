@@ -84,15 +84,12 @@ RUN pip install --no-cache-dir \
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p uploads outputs logs cache models
+RUN mkdir -p uploads outputs logs cache
 
-# Ensure app/models directory exists and has the right structure
-RUN ls -la app/ && echo "--- Creating app/models if missing ---" && \
-    mkdir -p app/models && \
-    echo "--- Root models directory contents ---" && ls -la models/ && \
-    echo "--- Copying models to app/models ---" && \
-    cp -r models/* app/models/ && \
-    echo "--- App/models after copy ---" && ls -la app/models/
+# Debug: Check what we actually have in the app directory after COPY
+RUN echo "=== App directory structure after COPY ===" && ls -la app/ && \
+    echo "=== App/models directory contents ===" && ls -la app/models/ && \
+    echo "=== App/models __init__.py ===" && cat app/models/__init__.py
 
 # Keep original structure - no need to move files
 
