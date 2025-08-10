@@ -51,7 +51,7 @@ cp .env.example .env
 docker-compose up -d
 ```
 
-4. The service will be available at `http://localhost:8000`
+4. The service will be available at `http://localhost:80`
 
 ### Manual Installation
 
@@ -88,7 +88,7 @@ python -m app.main
 ### Transcribe Audio
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/transcribe" \
+curl -X POST "http://localhost:80/api/v1/transcribe" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@audio.mp3" \
   -F "language=en" \
@@ -98,13 +98,13 @@ curl -X POST "http://localhost:8000/api/v1/transcribe" \
 ### Get Transcription Status
 
 ```bash
-curl "http://localhost:8000/api/v1/transcribe/{transcription_id}"
+curl "http://localhost:80/api/v1/transcribe/{transcription_id}"
 ```
 
 ### Download Transcription
 
 ```bash
-curl "http://localhost:8000/api/v1/transcribe/{transcription_id}/download?format=json"
+curl "http://localhost:80/api/v1/transcribe/{transcription_id}/download?format=json"
 ```
 
 ## Configuration
@@ -114,7 +114,7 @@ curl "http://localhost:8000/api/v1/transcribe/{transcription_id}/download?format
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `HOST` | Server host | `0.0.0.0` |
-| `PORT` | Server port | `8000` |
+| `PORT` | Server port | `80` |
 | `WHISPER_MODEL` | Whisper model size | `medium.en` |
 | `WHISPER_DEVICE` | Processing device | `auto` |
 | `MAX_FILE_SIZE` | Maximum file size | `500MB` |

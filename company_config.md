@@ -91,7 +91,7 @@ cd asr_whispher
 ./setup.sh
 docker-compose up -d
 
-# Access at: http://your-server:8000
+# Access at: http://your-server:80
 ```
 
 ### Option 2: **Cloud Deployment (AWS/GCP/Azure)**
@@ -190,17 +190,17 @@ COMPANY_STORAGE = {
 ### Example 1: **Daily Call Center Processing**
 ```bash
 # 1. Upload call recordings
-curl -X POST "http://localhost:8000/api/v1/transcribe" \
+curl -X POST "http://localhost:80/api/v1/transcribe" \
   -H "X-API-Key: company-api-key" \
   -F "file=@daily_calls.zip" \
   -F "language=en" \
   -F "enable_diarization=true"
 
 # 2. Monitor progress
-curl "http://localhost:8000/api/v1/transcribe/{id}"
+curl "http://localhost:80/api/v1/transcribe/{id}"
 
 # 3. Download results
-curl "http://localhost:8000/api/v1/transcribe/{id}/download?format=json"
+curl "http://localhost:80/api/v1/transcribe/{id}/download?format=json"
 ```
 
 ### Example 2: **Batch Meeting Processing**

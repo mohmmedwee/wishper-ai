@@ -50,13 +50,13 @@ python -m app.main
 
 ### 1. Check Service Health
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:80/health
 ```
 
 ### 2. Test Transcription API
 ```bash
 # Upload an audio file
-curl -X POST "http://localhost:8000/api/v1/transcribe" \
+curl -X POST "http://localhost:80/api/v1/transcribe" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@your_audio.mp3" \
   -F "language=en" \
