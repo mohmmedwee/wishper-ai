@@ -138,8 +138,6 @@ AUTO_DELETE_ENABLED=true
 ## 📊 Monitoring & Analytics
 
 ### 1. **Company Dashboard**
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:9090
 - **Custom metrics**: Company-specific KPIs
 
 ### 2. **Business Metrics**
@@ -155,16 +153,8 @@ COMPANY_METRICS = {
 
 ### 3. **Alerting**
 ```yaml
-# prometheus.yml
-alerts:
-  - alert: HighErrorRate
-    expr: rate(transcription_errors_total[5m]) > 0.1
-    for: 2m
-    labels:
-      severity: warning
-    annotations:
-      summary: "High transcription error rate"
-      description: "Error rate is {{ $value }}"
+# Example alerting configuration
+# You can implement custom monitoring using your preferred tools
 ```
 
 ## 🔄 Integration with Company Systems

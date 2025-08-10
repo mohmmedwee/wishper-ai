@@ -106,8 +106,6 @@ docker-compose up -d
 ### Services Included
 - **Whisper Service**: Main transcription service
 - **Redis**: Job queue and caching
-- **Prometheus**: Monitoring metrics
-- **Grafana**: Metrics dashboard (http://localhost:3000)
 
 ### Stop Services
 ```bash
@@ -159,7 +157,7 @@ docker-compose down
 1. **Set API Keys**: Edit `.env` file
 2. **Restrict Origins**: Configure CORS settings
 3. **Enable HTTPS**: Use reverse proxy (nginx)
-4. **Monitor Resources**: Check Prometheus metrics
+4. **Monitor Resources**: Check service logs and performance
 5. **Backup Data**: Regular backups of outputs
 
 ### Scaling

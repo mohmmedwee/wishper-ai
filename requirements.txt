@@ -37,8 +37,7 @@ redis>=4.6.0
 sqlalchemy>=2.0.0
 alembic>=1.11.0
 
-# Monitoring and logging
-prometheus-client>=0.17.0
+# Logging
 structlog>=23.1.0
 
 # Testing

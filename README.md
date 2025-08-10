@@ -175,7 +175,7 @@ mypy app/
 
 1. **Security**: Use proper API keys and authentication
 2. **Scaling**: Use Redis for job queuing and load balancing
-3. **Monitoring**: Enable Prometheus metrics and Grafana dashboards
+3. **Monitoring**: Custom monitoring and alerting support
 4. **Storage**: Use persistent volumes for uploads and outputs
 5. **Backup**: Implement regular backup strategies
 
