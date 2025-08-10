@@ -92,15 +92,16 @@ RUN echo "=== After COPY . . ===" && \
     echo "=== App directory ===" && ls -la app/ && \
     echo "=== App/models directory ===" && ls -la app/models/ 2>/dev/null || echo "app/models/ does not exist"
 
-# If app/models is missing, try to copy it from the source
-RUN if [ ! -d "app/models" ]; then \
-        echo "=== App/models missing, trying to copy from source ===" && \
+# If app/models is missing or empty, copy it from the source
+RUN if [ ! -d "app/models" ] || [ -z "$(ls -A app/models/ 2>/dev/null)" ]; then \
+        echo "=== App/models missing or empty, copying from source ===" && \
         mkdir -p app/models && \
-        echo "=== Checking if source app/models exists ===" && \
-        ls -la app/models/ 2>/dev/null || echo "Source app/models not found" && \
+        echo "=== Copying files from source app/models ===" && \
+        cp app/models/transcription.py app/models/ 2>/dev/null || echo "transcription.py not found" && \
+        cp app/models/__init__.py app/models/ 2>/dev/null || echo "__init__.py not found" && \
         echo "=== Final app/models contents ===" && ls -la app/models/; \
     else \
-        echo "=== App/models directory already exists ==="; \
+        echo "=== App/models directory already exists with files ==="; \
     fi
 
 # Now verify the structure
