@@ -1,218 +1,260 @@
-# Whisper Diarization Service
+# 🎯 Enhanced Whisper Diarization Service
 
-A production-ready service for automatic speech recognition (ASR) with speaker diarization, built on top of OpenAI's Whisper and NeMo speaker diarization models.
+A **production-ready AI service** that combines OpenAI's Whisper speech recognition with advanced speaker diarization and enhanced features.
 
-## Features
+## ✨ Features
 
-- **High-Quality Transcription**: Powered by OpenAI Whisper models
-- **Speaker Diarization**: Identify and separate different speakers in audio
-- **RESTful API**: Easy-to-use HTTP endpoints for transcription
-- **Async Processing**: Non-blocking audio processing with background tasks
-- **Multiple Formats**: Support for various audio formats (WAV, MP3, M4A, FLAC, OGG)
-- **Configurable Models**: Choose from different Whisper model sizes
-- **Production Ready**: Docker support, logging, monitoring, and health checks
-- **Scalable**: Redis-based job queue and caching support
+### Core Capabilities
+- **🎤 Speech Recognition**: High-quality transcription using OpenAI Whisper
+- **👥 Speaker Diarization**: Identify who is speaking when using NeMo
+- **🌐 RESTful API**: Easy integration with your applications
+- **🖥️ CLI Tools**: Command-line interface for batch processing
 
-## Architecture
+### Enhanced Features (Production Ready)
+- **🎵 Source Separation**: Audio enhancement using Demucs
+- **⚡ Parallel Processing**: Faster results with concurrent execution
+- **🎯 Enhanced Alignment**: Precise timestamp alignment with CTC forced aligner
+- **🌍 Language Detection**: Automatic language identification
+- **💬 Multilingual Punctuation**: Smart punctuation for multiple languages
+- **🚀 GPU Acceleration**: CUDA support for faster processing
 
-The service combines several technologies:
-
-1. **Whisper ASR**: For high-quality speech-to-text transcription
-2. **NeMo Speaker Diarization**: For identifying different speakers
-3. **FastAPI**: Modern, fast web framework for building APIs
-4. **Redis**: For job queuing and caching
-5. **Docker**: For easy deployment and scaling
-
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
+- **Python 3.10+** (for production with ML models)
+- **Python 3.13** (for development/testing - limited features)
+- **Docker & Docker Compose** (recommended for production)
 
-- Python 3.10+
-- FFmpeg
-- Docker and Docker Compose (recommended)
-- NVIDIA GPU with CUDA support (optional, for faster processing)
-
-### Using Docker (Recommended)
-
-1. Clone the repository:
+### Development Setup (Python 3.13)
 ```bash
-git clone <your-repo-url>
-cd asr_whispher
-```
+# Clone the repository
+git clone https://github.com/mohmmedwee/wishper-ai.git
+cd wishper-ai
 
-2. Copy and configure environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-3. Start the service:
-```bash
-docker-compose up -d
-```
-
-4. The service will be available at `http://localhost:80`
-
-### Manual Installation
-
-1. Install system dependencies:
-```bash
-# Ubuntu/Debian
-sudo apt update && sudo apt install ffmpeg libsndfile1-dev
-
-# macOS
-brew install ffmpeg
-
-# Windows
-# Download FFmpeg from https://ffmpeg.org/download.html
-```
-
-2. Install Python dependencies:
-```bash
+# Install basic dependencies
 pip install -r requirements.txt
+
+# Start the service
+./start.sh
 ```
 
-3. Set environment variables:
+### Production Setup (Python 3.10/3.11)
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+# Use production requirements for full ML capabilities
+pip install -r requirements.production.txt
+
+# Start with full features
+./start.sh
 ```
 
-4. Run the service:
+### Docker Deployment
 ```bash
-python -m app.main
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f whisper-diarization
 ```
 
-## API Usage
+## 📡 API Endpoints
 
-### Transcribe Audio
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Service health check |
+| `/docs` | GET | Interactive API documentation |
+| `/api/v1/transcribe` | POST | Transcribe audio file |
+| `/api/v1/transcribe/batch` | POST | Batch transcription |
+| `/api/v1/transcribe/{id}` | GET | Get transcription status |
+| `/api/v1/transcribe/{id}/download` | GET | Download results |
+| `/api/v1/transcribe/{id}/delete` | DELETE | Delete transcription |
+| `/api/v1/features` | GET | Get supported features |
+
+## 🎵 Supported Audio Formats
+
+- **WAV** - Best quality, largest size
+- **MP3** - Good balance, widely supported
+- **M4A** - Apple devices, good quality
+- **FLAC** - Lossless, high quality
+- **OGG** - Open source, good compression
+
+## 🛠️ CLI Usage
 
 ```bash
-curl -X POST "http://localhost:80/api/v1/transcribe" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@audio.mp3" \
-  -F "language=en" \
-  -F "enable_diarization=true"
+# Activate virtual environment
+source venv/bin/activate
+
+# Get service information
+python cli.py info
+
+# Check feature status
+python cli.py features
+
+# Transcribe audio file
+python cli.py transcribe audio.mp3 --language en --output result.json
+
+# List available models
+python cli.py models
 ```
 
-### Get Transcription Status
-
-```bash
-curl "http://localhost:80/api/v1/transcribe/{transcription_id}"
-```
-
-### Download Transcription
-
-```bash
-curl "http://localhost:80/api/v1/transcribe/{transcription_id}/download?format=json"
-```
-
-## Configuration
+## 🔧 Configuration
 
 ### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `HOST` | Server host | `0.0.0.0` |
-| `PORT` | Server port | `80` |
-| `WHISPER_MODEL` | Whisper model size | `medium.en` |
-| `WHISPER_DEVICE` | Processing device | `auto` |
-| `MAX_FILE_SIZE` | Maximum file size | `500MB` |
-| `LOG_LEVEL` | Logging level | `INFO` |
-
-### Whisper Models
-
-Available models (in order of size and accuracy):
-- `tiny` / `tiny.en` - Fastest, least accurate
-- `base` / `base.en` - Good balance
-- `small` / `small.en` - Better accuracy
-- `medium` / `medium.en` - Recommended (default)
-- `large` / `large-v2` / `large-v3` - Best accuracy, slowest
-
-## Development
-
-### Project Structure
-
-```
-asr_whispher/
-├── app/
-│   ├── api/           # API routes and endpoints
-│   ├── core/          # Configuration and core utilities
-│   ├── models/        # Data models and schemas
-│   ├── services/      # Business logic services
-│   └── utils/         # Utility functions
-├── config/            # Configuration files
-├── tests/             # Test suite
-├── uploads/           # Uploaded audio files
-├── outputs/           # Generated transcriptions
-├── Dockerfile         # Docker configuration
-├── docker-compose.yml # Docker Compose setup
-└── requirements.txt   # Python dependencies
-```
-
-### Running Tests
+Create a `.env` file based on `config.env`:
 
 ```bash
-pytest tests/
+# Server settings
+PORT=80
+HOST=0.0.0.0
+
+# Whisper settings
+WHISPER_MODEL=medium.en
+WHISPER_DEVICE=auto
+
+# NeMo settings
+NEMO_DEVICE=auto
+
+# Storage settings
+UPLOAD_DIR=./uploads
+OUTPUT_DIR=./outputs
+MAX_FILE_SIZE=524288000
 ```
 
-### Code Quality
+### Feature Flags
+Control enhanced features via API parameters:
 
-```bash
-# Format code
-black app/ tests/
-
-# Lint code
-flake8 app/ tests/
-
-# Type checking
-mypy app/
+```python
+# Example transcription request
+{
+    "source_separation": true,      # Enable Demucs source separation
+    "parallel_processing": true,    # Enable parallel execution
+    "enhanced_alignment": true,     # Enable CTC alignment
+    "enable_diarization": true      # Enable speaker diarization
+}
 ```
 
-## Deployment
+## 🐳 Docker Configuration
 
-### Production Considerations
+### Services
+- **whisper-diarization**: Main transcription service
+- **redis**: Job queue and caching (optional)
 
-1. **Security**: Use proper API keys and authentication
-2. **Scaling**: Use Redis for job queuing and load balancing
-3. **Monitoring**: Custom monitoring and alerting support
-4. **Storage**: Use persistent volumes for uploads and outputs
-5. **Backup**: Implement regular backup strategies
+### GPU Support
+The service includes GPU configuration for CUDA-enabled servers:
 
-### Kubernetes Deployment
+```yaml
+deploy:
+  resources:
+    reservations:
+      devices:
+        - driver: nvidia
+          count: 1
+          capabilities: [gpu]
+```
 
-Example deployment YAML files are provided in the `k8s/` directory.
+## 📊 Performance
 
-### Cloud Deployment
+### Model Comparison
+| Model | Speed | Accuracy | Memory | Use Case |
+|-------|-------|----------|---------|----------|
+| `tiny` | ⚡⚡⚡ | ⭐⭐ | 💾 | Real-time, low-resource |
+| `base` | ⚡⚡ | ⭐⭐⭐ | 💾💾 | Balanced performance |
+| `small` | ⚡ | ⭐⭐⭐⭐ | 💾💾💾 | High accuracy |
+| `medium` | 🐌 | ⭐⭐⭐⭐⭐ | 💾💾💾💾 | Best quality |
+| `large` | 🐌🐌 | ⭐⭐⭐⭐⭐ | 💾💾💾💾💾 | Research/enterprise |
 
-The service can be deployed on:
-- AWS (ECS, EKS)
-- Google Cloud (GKE, Cloud Run)
-- Azure (AKS, Container Instances)
-- DigitalOcean (App Platform)
+### Scaling Options
+- **Horizontal**: Multiple service instances behind a load balancer
+- **Vertical**: Increase container resources (CPU, GPU, memory)
+- **Queue-based**: Redis-based job processing for high throughput
 
-## Troubleshooting
+## 🔒 Security & Production
+
+### Before Going Live
+1. **Set API Keys**: Configure authentication in `.env`
+2. **Restrict Origins**: Configure CORS settings
+3. **Enable HTTPS**: Use reverse proxy (nginx)
+4. **Monitor Resources**: Set up logging and alerting
+5. **Backup Data**: Regular backups of outputs and configurations
+
+### Security Features
+- API key authentication
+- File upload validation
+- CORS configuration
+- Rate limiting (configurable)
+- Secure file handling
+
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **CUDA Out of Memory**: Reduce batch size or use smaller Whisper model
-2. **Audio Format Issues**: Ensure FFmpeg is properly installed
-3. **Model Download Failures**: Check internet connection and Hugging Face access
+1. **CUDA Out of Memory**
+   ```bash
+   # Use smaller model
+   export WHISPER_MODEL=base.en
+   
+   # Reduce batch size
+   export WHISPER_BATCH_SIZE=8
+   ```
 
-### Logs
+2. **Audio Format Issues**
+   ```bash
+   # Install FFmpeg
+   brew install ffmpeg  # macOS
+   apt-get install ffmpeg  # Ubuntu
+   ```
 
-Check logs with:
-```bash
-docker-compose logs whisper-diarization
-```
+3. **Service Won't Start**
+   ```bash
+   # Check port availability
+   lsof -i :80
+   
+   # Verify Python version
+   python --version
+   
+   # Check dependencies
+   pip list
+   ```
 
-### Performance Tuning
+### Get Help
+- **Logs**: `docker-compose logs whisper-diarization`
+- **Health**: `curl http://localhost:80/health`
+- **Features**: `curl http://localhost:80/api/v1/features`
+- **Documentation**: `http://localhost:80/docs`
 
-1. **GPU Acceleration**: Ensure CUDA is properly configured
-2. **Batch Processing**: Adjust batch sizes based on available memory
-3. **Model Selection**: Choose appropriate Whisper model for your use case
+## 🔄 Development vs Production
 
-## Contributing
+### Development Mode (Python 3.13)
+- ✅ Basic service structure
+- ✅ API endpoints
+- ✅ CLI tools
+- ✅ Mock transcription results
+- ❌ ML models (not compatible)
+- ❌ GPU acceleration
+
+### Production Mode (Python 3.10/3.11)
+- ✅ All features enabled
+- ✅ Full ML model support
+- ✅ GPU acceleration
+- ✅ Source separation
+- ✅ Enhanced alignment
+- ✅ Parallel processing
+
+## 📈 Roadmap
+
+- [ ] **v2.1**: Advanced speaker clustering algorithms
+- [ ] [ ] **v2.2**: Real-time streaming transcription
+- [ ] **v2.3**: Custom model fine-tuning
+- [ ] **v2.4**: Multi-language simultaneous translation
+- [ ] **v2.5**: Enterprise SSO integration
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -220,20 +262,17 @@ docker-compose logs whisper-diarization
 4. Add tests
 5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- [OpenAI Whisper](https://github.com/openai/whisper) - Speech recognition
-- [NeMo](https://github.com/NVIDIA/NeMo) - Speaker diarization
-- [FastAPI](https://fastapi.tiangolo.com/) - Web framework
-- [pyannote.audio](https://github.com/pyannote/pyannote-audio) - Speaker diarization
+- **OpenAI** for Whisper speech recognition
+- **NVIDIA NeMo** for speaker diarization
+- **Facebook Research** for Demucs source separation
+- **Hugging Face** for model hosting and tools
 
-## Support
+---
 
-For support and questions:
-- Create an issue on GitHub
-- Check the documentation
-- Review the troubleshooting guide
+**🎉 Ready to deploy!** Your enhanced transcription service is now production-ready with advanced features and GPU acceleration support.
